@@ -5,22 +5,16 @@ lvim.plugins = {
   { 'prettier/vim-prettier' },
   { "tpope/vim-surround" },
   { "leafgarland/typescript-vim" },
-  { 'zbirenbaum/copilot.lua',
-    event = { "VimEnter" },
+  { "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
     config = function()
-      vim.defer_fn(function()
-        require("copilot").setup {
-          plugin_manager_path = get_runtime_dir() .. "/site/pack/packer",
-          suggestion = {
-            auto_trigger = true, -- Automatically trigger completion
-            max_lines = 1000, -- Maximum number of lines to show
-            min_lines = 1, -- Minimum number of lines to show
-
-          }
+      require("copilot").setup({
+        suggestion = {
+          auto_trigger = true
         }
-      end, 100)
-    end,
-  },
+      })
+    end, },
   { "zbirenbaum/copilot-cmp",
     after = { "copilot.lua", "nvim-cmp" },
   },
@@ -59,14 +53,10 @@ lvim.keys.normal_mode["<T-j>"] = ":m .+1<CR>==" -- move line down with alt+k
 lvim.keys.normal_mode["<T-k>"] = ":m .-2<CR>==" -- move line up with alt+j
 lvim.keys.normal_mode["<leader>tt"] = "<cmd>TroubleToggle<cr>" -- list troubles in file
 
-lvim.keys.normal_mode["<Tab>"] = ":bnext<CR>" -- next buffer
-lvim.keys.normal_mode["<S-Tab>"] = ":bprevious<CR>" -- previous buffer
-
-lvim.keys.normal_mode["<leader>x"] = ":bd<CR>" -- close buffer
-lvim.keys.normal_mode["<leader>xx"] = ":%bd<CR>" -- close window
-
 lvim.keys.normal_mode["<leader>p"] = ":PrettierAsync<CR>" -- prettier
 
+lvim.keys.normal_mode["|"] = ":vsplit<CR>" -- split window vertically
+lvim.keys.normal_mode["<Leader>bo"] = ':%bd!|e #|bd #|normal`"<CR>'
 
 -- built in lunarvim plugin config
 lvim.builtin.alpha.active = true
@@ -100,4 +90,8 @@ linters.setup {
   { command = "eslint", filetypes = { "typescript", "typescriptreact", "javascript" } }
 }
 
-require("lvim.lsp.manager").setup "tailwindcss"
+local formatters = require "lvim.lsp.null-ls.formatters"
+
+formatters.setup {
+  { command = "prettier", filetypes = { "typescript", "typescriptreact", "javascript", "json", "css", "scss", "html", "markdown" } }
+}
