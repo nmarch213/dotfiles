@@ -5,7 +5,9 @@ lvim.plugins = {
   { 'prettier/vim-prettier' },
   { "tpope/vim-surround" },
   { "leafgarland/typescript-vim" },
-  { "zbirenbaum/copilot.lua",
+  { "mbbill/undotree" },
+  {
+    "zbirenbaum/copilot.lua",
     cmd = "Copilot",
     event = "InsertEnter",
     config = function()
@@ -14,8 +16,10 @@ lvim.plugins = {
           auto_trigger = true
         }
       })
-    end, },
-  { "zbirenbaum/copilot-cmp",
+    end,
+  },
+  {
+    "zbirenbaum/copilot-cmp",
     after = { "copilot.lua", "nvim-cmp" },
   },
   {
@@ -48,15 +52,17 @@ vim.opt.guifont = "10"
 
 -- keymappings [view all the defaults by pressing <leader>Lk]
 lvim.leader = "space"
-lvim.keys.normal_mode["<C-s>"] = ":w<cr>" -- save with ctrl+s
-lvim.keys.normal_mode["<T-j>"] = ":m .+1<CR>==" -- move line down with alt+k
-lvim.keys.normal_mode["<T-k>"] = ":m .-2<CR>==" -- move line up with alt+j
+lvim.keys.normal_mode["<C-s>"] = ":w<cr>"                      -- save with ctrl+s
+lvim.keys.normal_mode["<T-j>"] = ":m .+1<CR>=="                -- move line down with alt+k
+lvim.keys.normal_mode["<T-k>"] = ":m .-2<CR>=="                -- move line up with alt+j
 lvim.keys.normal_mode["<leader>tt"] = "<cmd>TroubleToggle<cr>" -- list troubles in file
 
-lvim.keys.normal_mode["<leader>p"] = ":PrettierAsync<CR>" -- prettier
+lvim.keys.normal_mode["<leader>p"] = ":PrettierAsync<CR>"      -- prettier
 
-lvim.keys.normal_mode["|"] = ":vsplit<CR>" -- split window vertically
+lvim.keys.normal_mode["|"] = ":vsplit<CR>"                     -- split window vertically
 lvim.keys.normal_mode["<Leader>bo"] = ':%bd!|e #|bd #|normal`"<CR>'
+
+lvim.keys.normal_mode["<Leader>u"] = ":UndotreeToggle<CR>" -- undo tree
 
 -- built in lunarvim plugin config
 lvim.builtin.alpha.active = true
@@ -93,5 +99,8 @@ linters.setup {
 local formatters = require "lvim.lsp.null-ls.formatters"
 
 formatters.setup {
-  { command = "prettier", filetypes = { "typescript", "typescriptreact", "javascript", "json", "css", "scss", "html", "markdown" } }
+  {
+    command = "prettier",
+    filetypes = { "typescript", "typescriptreact", "javascript", "json", "css", "scss", "html", "markdown" }
+  }
 }
