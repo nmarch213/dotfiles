@@ -1,7 +1,26 @@
 -- plugins
 -- define the plugins so that the settings below can be used
 lvim.plugins = {
-  { 'Mofiqul/dracula.nvim' },
+  -- { 'Mofiqul/dracula.nvim' },
+  {
+    'catppuccin/nvim',
+    config = function()
+      require("catppuccin").setup {
+        flavour = "mocha",
+        transparent_background = true
+
+      }
+    end
+  },
+  {
+    "akinsho/bufferline.nvim",
+    after = "catppuccin",
+    config = function()
+      require("bufferline").setup {
+        highlights = require("catppuccin.groups.integrations.bufferline").get()
+      }
+    end
+  },
   { 'prettier/vim-prettier' },
   { "tpope/vim-surround" },
   { "leafgarland/typescript-vim" },
@@ -46,9 +65,10 @@ table.insert(lvim.builtin.cmp.sources, 1, { name = "copilot" })
 -- general
 lvim.log.level = "warn"
 lvim.format_on_save.enabled = true
-lvim.colorscheme = "dracula"
+lvim.colorscheme = "catppuccin"
 vim.opt.relativenumber = true
 vim.opt.guifont = "10"
+lvim.transparent_window = true
 
 -- keymappings [view all the defaults by pressing <leader>Lk]
 lvim.leader = "space"
@@ -63,6 +83,9 @@ lvim.keys.normal_mode["|"] = ":vsplit<CR>"                     -- split window v
 lvim.keys.normal_mode["<Leader>bo"] = ':%bd!|e #|bd #|normal`"<CR>'
 
 lvim.keys.normal_mode["<Leader>u"] = ":UndotreeToggle<CR>" -- undo tree
+
+lvim.keys.normal_mode["<C-d>"] = "<C-d>zz"                 -- scroll down
+lvim.keys.normal_mode["<C-u>"] = "<C-u>zz"                 -- scroll up
 
 -- built in lunarvim plugin config
 lvim.builtin.alpha.active = true
