@@ -43,7 +43,6 @@ lvim.plugins = {
   },
   {
     "folke/trouble.nvim",
-    requires = "kyazdani42/nvim-web-devicons",
     config = function()
       require("trouble").setup {
         -- your configuration comes here
@@ -54,9 +53,12 @@ lvim.plugins = {
   }
 }
 
+
 lvim.autocommands.custom_groups = {
   { "BufWritePre", "*.js,*.jsx,*.ts,*.tsx,*.css,*.scss,*.html,*.json,*.md", "PrettierAsync" },
 }
+
+lvim.lsp.installer.setup.automatic_installation = true
 
 -- Copilot settings
 lvim.builtin.cmp.formatting.source_names["copilot"] = "(Copilot)"
@@ -112,18 +114,26 @@ lvim.builtin.treesitter.ignore_install = { "haskell" }
 lvim.builtin.treesitter.highlight.enable = true
 
 
--- setup custom linters/formatters
-local linters = require "lvim.lsp.null-ls.linters"
+-- -- setup custom linters/formatters
+-- local linters = require "lvim.lsp.null-ls.linters"
 
-linters.setup {
-  { command = "eslint", filetypes = { "typescript", "typescriptreact", "javascript" } }
-}
+-- linters.setup {
+--   { command = "eslint", filetypes = { "typescript", "typescriptreact", "javascript" } }
+-- }
 
-local formatters = require "lvim.lsp.null-ls.formatters"
 
-formatters.setup {
-  {
-    command = "prettier",
-    filetypes = { "typescript", "typescriptreact", "javascript", "json", "css", "scss", "html", "markdown" }
-  }
-}
+local lspconfig = require "lspconfig"
+
+
+lspconfig.tailwindcss.setup({
+  settings = {
+    tailwindCSS = {
+      experimental = {
+        classRegex = {
+          { "cva\\(([^)]*)\\)",
+            "[\"'`]([^\"'`]*).*?[\"'`]" },
+        },
+      },
+    },
+  },
+})
