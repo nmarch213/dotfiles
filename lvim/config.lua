@@ -53,10 +53,10 @@ lvim.plugins = {
   }
 }
 
-
-lvim.autocommands.custom_groups = {
-  { "BufWritePre", "*.js,*.jsx,*.ts,*.tsx,*.css,*.scss,*.html,*.json,*.md", "PrettierAsync" },
-}
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*.js,*.jsx,*.ts,*.tsx,*.css,*.scss,*.html,*.json,*.md",
+  command = "PrettierAsync"
+})
 
 lvim.lsp.installer.setup.automatic_installation = true
 
@@ -114,12 +114,12 @@ lvim.builtin.treesitter.ignore_install = { "haskell" }
 lvim.builtin.treesitter.highlight.enable = true
 
 
--- -- setup custom linters/formatters
--- local linters = require "lvim.lsp.null-ls.linters"
+-- setup custom linters/formatters
+local linters = require "lvim.lsp.null-ls.linters"
 
--- linters.setup {
---   { command = "eslint", filetypes = { "typescript", "typescriptreact", "javascript" } }
--- }
+linters.setup {
+  { command = "eslint", filetypes = { "typescript", "typescriptreact", "javascript" } }
+}
 
 
 local lspconfig = require "lspconfig"
