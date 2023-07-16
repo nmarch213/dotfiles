@@ -21,9 +21,7 @@ lvim.plugins = {
       }
     end
   },
-  { 'prettier/vim-prettier' },
   { "tpope/vim-surround" },
-  { "leafgarland/typescript-vim" },
   { "mbbill/undotree" },
   {
     "zbirenbaum/copilot.lua",
@@ -31,15 +29,20 @@ lvim.plugins = {
     event = "InsertEnter",
     config = function()
       require("copilot").setup({
-        suggestion = {
-          auto_trigger = true
-        }
+        suggestion = { enabled = false },
+        panel = { enabled = false },
       })
     end,
   },
   {
     "zbirenbaum/copilot-cmp",
-    after = { "copilot.lua", "nvim-cmp" },
+    config = function()
+      require("copilot_cmp").setup(
+        {
+          fix_pairs = true,
+        }
+      )
+    end
   },
   {
     "folke/trouble.nvim",
@@ -50,15 +53,42 @@ lvim.plugins = {
         -- refer to the configuration section below
       }
     end
+  },
+  {
+    "epwalsh/obsidian.nvim",
+    lazy = true,
+    event = "BufReadPre /Users/nicholasmarch/Library/**",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "hrsh7th/nvim-cmp",
+      "nvim-telescope/telescope.nvim",
+    },
+    opts = {
+      dir = "/Users/nicholasmarch/Library/Mobile Documents/iCloud~md~obsidian/Documents/Brain",
+      notes_subdir = "notes",
+      daily_notes = {
+        folder = "notes/daily",
+      },
+      completion = {
+        nvim_cmp = true,
+        min_chars = 2,
+        new_notes_location = "notes_subdir"
+      },
+    },
+    config = function(_, opts)
+      require("obsidian").setup(opts)
+      -- Optional, override the 'gf' keymap to utilize Obsidian's search functionality.
+      -- see also: 'follow_url_func' config option above.
+      vim.keymap.set("n", "gf", function()
+        if require("obsidian").util.cursor_on_markdown_link() then
+          return "<cmd>ObsidianFollowLink<CR>"
+        else
+          return "gf"
+        end
+      end, { noremap = false, expr = true })
+    end,
   }
 }
-
-vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = "*.js,*.jsx,*.ts,*.tsx,*.css,*.scss,*.html,*.json,*.md",
-  command = "PrettierAsync"
-})
-
-lvim.lsp.installer.setup.automatic_installation = true
 
 -- Copilot settings
 lvim.builtin.cmp.formatting.source_names["copilot"] = "(Copilot)"
@@ -74,20 +104,15 @@ lvim.transparent_window = true
 
 -- keymappings [view all the defaults by pressing <leader>Lk]
 lvim.leader = "space"
-lvim.keys.normal_mode["<C-s>"] = ":w<cr>"                      -- save with ctrl+s
-lvim.keys.normal_mode["<T-j>"] = ":m .+1<CR>=="                -- move line down with alt+k
-lvim.keys.normal_mode["<T-k>"] = ":m .-2<CR>=="                -- move line up with alt+j
-lvim.keys.normal_mode["<leader>tt"] = "<cmd>TroubleToggle<cr>" -- list troubles in file
+lvim.keys.normal_mode["<C-s>"] = ":w<cr>"                           -- save with ctrl+s
+lvim.keys.normal_mode["<T-j>"] = ":m .+1<CR>=="                     -- move line down with alt+k
+lvim.keys.normal_mode["<T-k>"] = ":m .-2<CR>=="                     -- move line up with alt+j
+lvim.keys.normal_mode["|"] = ":vsplit<CR>"                          -- split window vertically
+lvim.keys.normal_mode["<Leader>bo"] = ':%bd!|e #|bd #|normal`"<CR>' -- clear all buffers
+lvim.keys.normal_mode["<Leader>u"] = ":UndotreeToggle<CR>"          -- undo tree
+lvim.keys.normal_mode["<C-d>"] = "<C-d>zz"                          -- scroll down
+lvim.keys.normal_mode["<C-u>"] = "<C-u>zz"                          -- scroll up
 
-lvim.keys.normal_mode["<leader>p"] = ":PrettierAsync<CR>"      -- prettier
-
-lvim.keys.normal_mode["|"] = ":vsplit<CR>"                     -- split window vertically
-lvim.keys.normal_mode["<Leader>bo"] = ':%bd!|e #|bd #|normal`"<CR>'
-
-lvim.keys.normal_mode["<Leader>u"] = ":UndotreeToggle<CR>" -- undo tree
-
-lvim.keys.normal_mode["<C-d>"] = "<C-d>zz"                 -- scroll down
-lvim.keys.normal_mode["<C-u>"] = "<C-u>zz"                 -- scroll up
 
 -- built in lunarvim plugin config
 lvim.builtin.alpha.active = true
@@ -95,35 +120,51 @@ lvim.builtin.alpha.mode = "dashboard"
 lvim.builtin.terminal.active = true
 lvim.builtin.nvimtree.setup.view.side = "right"
 lvim.builtin.nvimtree.setup.renderer.icons.show.git = false
--- if you don't want all the parsers change this to a table of the ones you want
-lvim.builtin.treesitter.ensure_installed = {
-  "bash",
-  "c",
-  "javascript",
-  "json",
-  "lua",
-  "python",
-  "typescript",
-  "tsx",
-  "css",
-  "rust",
-  "java",
-  "yaml",
-}
-lvim.builtin.treesitter.ignore_install = { "haskell" }
 lvim.builtin.treesitter.highlight.enable = true
 
 
--- setup custom linters/formatters
-local linters = require "lvim.lsp.null-ls.linters"
+lvim.builtin.which_key.mappings["t"] = {
+  name = "+Trouble",
+  r = { "<cmd>Trouble lsp_references<cr>", "References" },
+  f = { "<cmd>Trouble lsp_definitions<cr>", "Definitions" },
+  d = { "<cmd>Trouble lsp_document_diagnostics<cr>", "Diagnostics" },
+  q = { "<cmd>Trouble quickfix<cr>", "QuickFix" },
+  l = { "<cmd>Trouble loclist<cr>", "LocationList" },
+  w = { "<cmd>Trouble lsp_workspace_diagnostics<cr>", "Diagnostics" },
+}
 
+lvim.builtin.which_key.mappings["o"] = {
+  name = "+Obsidian",
+  b = { "<cmd>ObsidianBacklinks<cr>", "Backlinks" },
+  t = { "<cmd>ObsidianToday<cr>", "Today" },
+  y = { "<cmd>ObsidianYesterday<cr>", "Yesterday" },
+  o = { "<cmd>ObsidianOpen<cr>", "Open" },
+  n = { "<cmd>ObsidianNew<cr>", "New" },
+  s = { "<cmd>ObsidianSearch<cr>", "Search" },
+  q = { "<cmd>ObsidianQuickSwitch<cr>", "Quick Switch" },
+  l = { "<cmd>ObsidianLink<cr>", "Link" },
+  L = { "<cmd>ObsidianLinkNew<cr>", "Link New" },
+  f = { "<cmd>ObsidianFollowLink<cr>", "Follow Link" },
+  T = { "<cmd>ObsidianTemplate<cr>", "Template" },
+}
+
+local formatters = require "lvim.lsp.null-ls.formatters"
+formatters.setup {
+  {
+    name = "prettierd",
+  },
+}
+
+local linters = require "lvim.lsp.null-ls.linters"
 linters.setup {
-  { command = "eslint", filetypes = { "typescript", "typescriptreact", "javascript" } }
+
+  {
+    name = 'eslint'
+  }
 }
 
 
 local lspconfig = require "lspconfig"
-
 
 lspconfig.tailwindcss.setup({
   settings = {
