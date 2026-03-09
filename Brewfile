@@ -45,7 +45,3 @@ cask "discord"
 cask "obs"
 cask "spotify"
 cask "vlc"
-
-# Gaming (uncomment as needed)
-# cask "battle-net"
-# cask "steam"
