@@ -1,0 +1,81 @@
+# Font
+font-family = Dank Mono
+font-family = DankMono Nerd Font Mono
+font-size = 13
+font-thicken = true
+font-feature = +liga
+font-feature = +calt
+
+# Theme
+theme = Catppuccin Mocha
+
+# Background
+background-opacity = 0.85
+background-blur-radius = 20
+background-image = ~/.config/ghostty/blue_moon.jpeg
+background-image-opacity = 0.5
+background-image-fit = cover
+background-image-position = center
+
+# Window
+window-decoration = true
+window-padding-x = 8
+window-padding-y = 8
+window-padding-balance = true
+window-save-state = always
+macos-titlebar-style = tabs
+macos-option-as-alt = true
+mouse-hide-while-typing = true
+scrollbar = system
+
+# Quick terminal
+keybind = global:cmd+grave_accent=toggle_quick_terminal
+quick-terminal-position = top
+quick-terminal-animation-duration = 0.2
+quick-terminal-autohide = true
+
+# Shell integration
+shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo,path
+notify-on-command-finish = unfocused
+notify-on-command-finish-after = 5s
+
+# Clipboard
+clipboard-trim-trailing-spaces = true
+clipboard-paste-protection = true
+clipboard-read = allow
+clipboard-write = allow
+
+# Keybinds — let Ctrl+h/j/k/l pass through to tmux/nvim
+keybind = ctrl+j=unbind
+keybind = ctrl+k=unbind
+
+# Keybinds — tmux window switching (Ctrl+Space = \x00)
+keybind = cmd+1=text:\x001
+keybind = cmd+2=text:\x002
+keybind = cmd+3=text:\x003
+keybind = cmd+4=text:\x004
+keybind = cmd+5=text:\x005
+keybind = cmd+6=text:\x006
+keybind = cmd+7=text:\x007
+keybind = cmd+8=text:\x008
+keybind = cmd+9=text:\x009
+
+# Keybinds — tmux splits via Cmd (Ctrl+Space + | or -)
+keybind = cmd+d=text:\x00|
+keybind = cmd+shift+d=text:\x00-
+
+# Keybinds — tmux pane zoom (Ctrl+Space + z)
+keybind = cmd+shift+enter=text:\x00z
+
+# Keybinds — tabs & basics
+keybind = cmd+t=text:\x00c
+keybind = cmd+w=text:\x00x
+keybind = cmd+k=clear_screen
+keybind = cmd+comma=reload_config
+
+# Keybinds — navigation & utilities
+keybind = cmd+up=jump_to_prompt:-1
+keybind = cmd+down=jump_to_prompt:1
+keybind = cmd+shift+p=toggle_command_palette
+keybind = cmd+shift+f=toggle_window_float_on_top
+keybind = cmd+shift+o=toggle_background_opacity
