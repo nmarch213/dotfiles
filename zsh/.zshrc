@@ -19,17 +19,18 @@ else
 fi
 
 # --- Plugins (load order matters) ---
+BREW_PREFIX=$(brew --prefix)
 
 # fzf-tab (after compinit, before other plugins)
-source /opt/homebrew/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh
+source "$BREW_PREFIX/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh"
 
 # Autosuggestions
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 # Syntax highlighting (must be last plugin sourced)
-source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 # --- fzf ---
 source <(fzf --zsh)
@@ -58,7 +59,7 @@ eval "$(zoxide init zsh)"
 eval "$(direnv hook zsh)"
 
 # pnpm
-export PNPM_HOME="/Users/rival/Library/pnpm"
+export PNPM_HOME="$HOME/Library/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
