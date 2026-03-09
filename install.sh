@@ -53,10 +53,6 @@ fi
 source "$HOME/.cargo/env" 2>/dev/null || true
 rustup update stable
 
-# Cargo tools
-log "Installing cargo tools..."
-command -v cargo-watch &>/dev/null || cargo install cargo-watch
-
 # --- Node ---
 
 # nvm

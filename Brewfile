@@ -1,11 +1,6 @@
-# Taps
-tap "stripe/stripe-cli"
-
-# Core (not installed by default on all Macs)
+# Core
 brew "git"
-brew "curl"
 brew "jq"
-brew "coreutils"
 
 # CLI essentials
 brew "bat"
@@ -18,7 +13,6 @@ brew "gh"
 brew "git-delta"
 brew "lazygit"
 brew "ripgrep"
-brew "shellcheck"
 brew "starship"
 brew "stow"
 brew "tmux"
@@ -34,32 +28,19 @@ brew "uv"
 
 # Dev tools
 brew "actionlint"
-brew "stripe/stripe-cli/stripe"
 
 # Services
 brew "ollama"
-brew "postgresql@14"
-
-# Infra
-brew "awscli"
 brew "tailscale"
 
-# Apps — core
-cask "arc"
+# Apps
 cask "claude"
-cask "cursor"
 cask "ghostty"
 cask "google-chrome"
 cask "obsidian"
 cask "raycast"
 
-# Apps — work
-cask "linear-linear"
-cask "notion"
-cask "slack"
-cask "zoom"
-
-# Apps — media
+# Media
 cask "discord"
 cask "obs"
 cask "spotify"
@@ -68,5 +49,3 @@ cask "vlc"
 # Gaming (uncomment as needed)
 # cask "battle-net"
 # cask "steam"
-# cask "godot"
-# cask "godot-mono"
