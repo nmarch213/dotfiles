@@ -1,6 +1,12 @@
 # Taps
 tap "stripe/stripe-cli"
 
+# Core (not installed by default on all Macs)
+brew "git"
+brew "curl"
+brew "jq"
+brew "coreutils"
+
 # CLI essentials
 brew "bat"
 brew "direnv"
@@ -12,6 +18,7 @@ brew "gh"
 brew "git-delta"
 brew "lazygit"
 brew "ripgrep"
+brew "shellcheck"
 brew "starship"
 brew "stow"
 brew "tmux"
