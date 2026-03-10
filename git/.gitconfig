@@ -10,6 +10,8 @@
 	side-by-side = true
 	line-numbers = true
 	syntax-theme = Catppuccin Mocha
+[diff]
+	colorMoved = default
 [merge]
 	conflictstyle = zdiff3
 [include]

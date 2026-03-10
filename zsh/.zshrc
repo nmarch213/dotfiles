@@ -1,3 +1,8 @@
+# Auto-launch tmux in Ghostty (early exit before loading plugins)
+if [[ "$TERM_PROGRAM" == "ghostty" ]] && command -v tmux &>/dev/null && [[ -z "$TMUX" ]]; then
+  tmux attach-session -t main 2>/dev/null || tmux new-session -s main
+fi
+
 # History
 HISTFILE=~/.zsh_history
 HISTSIZE=50000
@@ -19,7 +24,7 @@ else
 fi
 
 # --- Plugins (load order matters) ---
-BREW_PREFIX=$(brew --prefix)
+BREW_PREFIX="${HOMEBREW_PREFIX:-/opt/homebrew}"
 
 # fzf-tab (after compinit, before other plugins)
 source "$BREW_PREFIX/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh"
@@ -66,8 +71,8 @@ case ":$PATH:" in
 esac
 
 # Aliases
-alias brainclaude="cd '/Users/rival/Library/Mobile Documents/iCloud~md~obsidian/Documents/Brain' && claude"
-alias thots="open 'obsidian://open?path=/Users/rival/Developer/rival-labs/thoughts'"
+alias brainclaude="cd '$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Brain' && claude"
+alias thots="open 'obsidian://open?path=$HOME/Developer/rival-labs/thoughts'"
 alias yolo='claude --dangerously-skip-permissions'
 
 alias ls='eza --icons'
@@ -76,15 +81,16 @@ alias lt='eza --tree --icons --level=2'
 alias cat='bat --paging=never'
 alias find='fd'
 
-# nvm
+# nvm (lazy-loaded)
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+nvm() {
+  unset -f nvm node npm npx
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  nvm "$@"
+}
+node() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; node "$@"; }
+npm() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; npm "$@"; }
+npx() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; npx "$@"; }
 
 # PATH
 export PATH="$HOME/.local/bin:$PATH"
-
-# Auto-launch tmux in Ghostty
-if [[ "$TERM_PROGRAM" == "ghostty" ]] && command -v tmux &>/dev/null && [[ -z "$TMUX" ]]; then
-  tmux attach-session -t main 2>/dev/null || tmux new-session -s main
-fi
