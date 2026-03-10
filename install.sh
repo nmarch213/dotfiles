@@ -36,6 +36,19 @@ brew bundle --file="$DOTFILES/Brewfile"
 
 log "Stowing configs..."
 cd "$DOTFILES"
+
+# Files that should never be overwritten if they already exist
+SKIP_IF_EXISTS=(
+  "$HOME/.claude/settings.json"
+)
+
+# Temporarily move protected files aside
+for f in "${SKIP_IF_EXISTS[@]}"; do
+  if [ -f "$f" ] && [ ! -L "$f" ]; then
+    mv "$f" "${f}.bak"
+  fi
+done
+
 for pkg in zsh git starship ghostty tmux nvim ssh claude fonts; do
   if [ -d "$pkg" ]; then
     stow -v --adopt "$pkg" 2>/dev/null || stow -v "$pkg"
@@ -43,6 +56,15 @@ for pkg in zsh git starship ghostty tmux nvim ssh claude fonts; do
 done
 # Reset any adopted diffs back to repo versions
 git checkout -- .
+
+# Restore protected files (overwrite the symlink)
+for f in "${SKIP_IF_EXISTS[@]}"; do
+  if [ -f "${f}.bak" ]; then
+    rm -f "$f"
+    mv "${f}.bak" "$f"
+    log "Preserved existing $(basename "$f")"
+  fi
+done
 
 # --- Rust ---
 
