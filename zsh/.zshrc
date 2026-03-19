@@ -1,8 +1,3 @@
-# Auto-launch tmux in Ghostty (early exit before loading plugins)
-if [[ "$TERM_PROGRAM" == "ghostty" ]] && command -v tmux &>/dev/null && [[ -z "$TMUX" ]]; then
-  tmux attach-session -t main 2>/dev/null || tmux new-session -s main
-fi
-
 # History
 HISTFILE=~/.zsh_history
 HISTSIZE=50000
@@ -94,3 +89,11 @@ npx() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.
 
 # PATH
 export PATH="$HOME/.local/bin:$PATH"
+
+# pnpm
+export PNPM_HOME="/Users/rival/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
