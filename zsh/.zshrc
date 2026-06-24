@@ -79,21 +79,17 @@ alias find='fd'
 # nvm (lazy-loaded)
 export NVM_DIR="$HOME/.nvm"
 nvm() {
-  unset -f nvm node npm npx
+  unset -f nvm node npm npx pnpm
   [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
   nvm "$@"
 }
-node() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; node "$@"; }
-npm() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; npm "$@"; }
-npx() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; npx "$@"; }
+node() { unset -f nvm node npm npx pnpm; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; node "$@"; }
+npm() { unset -f nvm node npm npx pnpm; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; npm "$@"; }
+npx() { unset -f nvm node npm npx pnpm; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; npx "$@"; }
+pnpm() { unset -f nvm node npm npx pnpm; [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"; pnpm "$@"; }
 
 # PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# pnpm
-export PNPM_HOME="/Users/rival/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
+# opencode
+export PATH="$HOME/.opencode/bin:$PATH"

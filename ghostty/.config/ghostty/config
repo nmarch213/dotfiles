@@ -41,7 +41,7 @@ notify-on-command-finish-after = 5s
 
 # Clipboard
 clipboard-trim-trailing-spaces = true
-clipboard-paste-protection = true
+clipboard-paste-protection = false
 clipboard-read = allow
 clipboard-write = allow
 
