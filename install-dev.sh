@@ -3,6 +3,7 @@ set -euo pipefail
 
 DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
 PACKAGES=(agents zsh git starship ghostty tmux nvim)
+export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 
 log() { echo "==> $1"; }
 
@@ -38,6 +39,22 @@ install_tmux_plugins() {
   "$tpm_dir/bin/install_plugins"
 }
 
+install_claude_code() {
+  if command -v claude >/dev/null 2>&1 || [ -x "$HOME/.local/bin/claude" ]; then
+    return
+  fi
+
+  curl -fsSL https://claude.ai/install.sh | bash
+}
+
+install_opencode() {
+  if command -v opencode >/dev/null 2>&1 || [ -x "$HOME/.opencode/bin/opencode" ]; then
+    return
+  fi
+
+  curl -fsSL https://opencode.ai/install | bash
+}
+
 if ! command -v brew >/dev/null 2>&1; then
   log "Homebrew is required. Install it first, then rerun this script."
   exit 1
@@ -45,6 +62,10 @@ fi
 
 log "Installing missing dev packages without upgrading existing packages..."
 brew bundle --file="$DOTFILES/Brewfile.dev" --no-upgrade
+
+log "Installing missing agent CLIs..."
+install_claude_code
+install_opencode
 
 log "Checking Stow conflicts..."
 cd "$DOTFILES"

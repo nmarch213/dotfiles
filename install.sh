@@ -2,6 +2,7 @@
 set -euo pipefail
 
 DOTFILES="$HOME/.dotfiles"
+export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 
 log() { echo "==> $1"; }
 
@@ -24,6 +25,24 @@ ensure_claude_md_link() {
   fi
 
   ln -s ../AGENTS.md "$claude_md"
+}
+
+install_claude_code() {
+  if command -v claude >/dev/null 2>&1 || [ -x "$HOME/.local/bin/claude" ]; then
+    return
+  fi
+
+  log "Installing Claude Code..."
+  curl -fsSL https://claude.ai/install.sh | bash
+}
+
+install_opencode() {
+  if command -v opencode >/dev/null 2>&1 || [ -x "$HOME/.opencode/bin/opencode" ]; then
+    return
+  fi
+
+  log "Installing opencode..."
+  curl -fsSL https://opencode.ai/install | bash
 }
 
 # --- Prerequisites ---
@@ -116,12 +135,10 @@ if ! command -v pnpm &>/dev/null; then
   corepack prepare pnpm@latest --activate
 fi
 
-# --- Claude Code ---
+# --- Agent CLIs ---
 
-if ! command -v claude &>/dev/null; then
-  log "Installing Claude Code..."
-  curl -fsSL https://claude.ai/install.sh | sh
-fi
+install_claude_code
+install_opencode
 
 # --- tmux plugins ---
 

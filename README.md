@@ -12,7 +12,7 @@ cd ~/.dotfiles
 ./install-dev.sh
 ```
 
-The dev installer uses `Brewfile.dev`, runs Homebrew with `--no-upgrade`, restows only dev config packages, installs tmux plugins with TPM, and refuses Stow conflicts instead of adopting existing files.
+The dev installer uses `Brewfile.dev`, runs Homebrew with `--no-upgrade`, installs the Codex, Claude Code, and opencode CLIs when missing, restows only dev config packages, installs tmux plugins with TPM, and refuses Stow conflicts instead of adopting existing files.
 
 Managed dev packages:
 

@@ -30,5 +30,6 @@ brew "uv"
 brew "actionlint"
 
 # Apps
+cask "codex"
 cask "claude"
 cask "ghostty"

@@ -34,6 +34,7 @@ brew "ollama"
 brew "tailscale"
 
 # Apps
+cask "codex"
 cask "claude"
 cask "ghostty"
 cask "google-chrome"
