@@ -50,14 +50,23 @@ keybind = ctrl+j=unbind
 keybind = ctrl+k=unbind
 
 # Keybinds — tmux window switching (Ctrl+Space = \x00)
+keybind = cmd+digit_1=text:\x001
 keybind = cmd+1=text:\x001
+keybind = cmd+digit_2=text:\x002
 keybind = cmd+2=text:\x002
+keybind = cmd+digit_3=text:\x003
 keybind = cmd+3=text:\x003
+keybind = cmd+digit_4=text:\x004
 keybind = cmd+4=text:\x004
+keybind = cmd+digit_5=text:\x005
 keybind = cmd+5=text:\x005
+keybind = cmd+digit_6=text:\x006
 keybind = cmd+6=text:\x006
+keybind = cmd+digit_7=text:\x007
 keybind = cmd+7=text:\x007
+keybind = cmd+digit_8=text:\x008
 keybind = cmd+8=text:\x008
+keybind = cmd+digit_9=text:\x009
 keybind = cmd+9=text:\x009
 
 # Keybinds — tmux splits via Cmd (Ctrl+Space + | or -)
