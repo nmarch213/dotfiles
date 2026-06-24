@@ -5,6 +5,27 @@ DOTFILES="$HOME/.dotfiles"
 
 log() { echo "==> $1"; }
 
+ensure_claude_md_link() {
+  local claude_dir="$HOME/.claude"
+  local claude_md="$claude_dir/CLAUDE.md"
+
+  mkdir -p "$claude_dir"
+
+  if [ -L "$claude_md" ]; then
+    if [ "$(readlink "$claude_md")" = "../AGENTS.md" ]; then
+      return
+    fi
+    rm "$claude_md"
+  elif [ -e "$claude_md" ]; then
+    local backup
+    backup="$claude_md.backup.$(date +%Y%m%d%H%M%S)"
+    mv "$claude_md" "$backup"
+    log "Backed up existing CLAUDE.md to $backup"
+  fi
+
+  ln -s ../AGENTS.md "$claude_md"
+}
+
 # --- Prerequisites ---
 
 # Xcode CLI tools
@@ -49,7 +70,7 @@ for f in "${SKIP_IF_EXISTS[@]}"; do
   fi
 done
 
-for pkg in zsh git starship ghostty tmux nvim ssh claude fonts; do
+for pkg in agents zsh git starship ghostty tmux nvim ssh claude fonts; do
   if [ -d "$pkg" ]; then
     stow -v --adopt "$pkg" 2>/dev/null || stow -v "$pkg"
   fi
@@ -65,6 +86,8 @@ for f in "${SKIP_IF_EXISTS[@]}"; do
     log "Preserved existing $(basename "$f")"
   fi
 done
+
+ensure_claude_md_link
 
 # --- Rust ---
 
@@ -104,10 +127,12 @@ fi
 
 if [ -d "$HOME/.tmux/plugins/tpm" ]; then
   log "Updating tmux plugins..."
+  tmux start-server \; source-file "$HOME/.config/tmux/tmux.conf" >/dev/null 2>&1 || true
   "$HOME/.tmux/plugins/tpm/bin/install_plugins"
 else
   log "Installing tpm + plugins..."
   git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+  tmux start-server \; source-file "$HOME/.config/tmux/tmux.conf" >/dev/null 2>&1 || true
   "$HOME/.tmux/plugins/tpm/bin/install_plugins"
 fi
 
