@@ -37,6 +37,7 @@ Use `./dot` as the normal entrypoint:
 
 ```sh
 ./dot doctor
+./dot dry-run
 ./dot install-dev
 ./dot install-full
 ./dot stow
@@ -46,6 +47,8 @@ Use `./dot` as the normal entrypoint:
 ```
 
 `doctor` runs syntax, Stow, package-manifest, shell, Git, SSH, Ghostty, tmux, Neovim, Claude, opencode, and TPM checks where the relevant tools are installed.
+
+For an agent-run install, use [AGENT_INSTALL.md](AGENT_INSTALL.md).
 
 ## Full Setup
 

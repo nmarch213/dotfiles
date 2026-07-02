@@ -21,6 +21,42 @@ require_command() {
   fi
 }
 
+resolve_link_reference() {
+  local link_path="$1"
+  local reference="$2"
+  local base_dir
+  local reference_dir
+  local reference_name
+
+  if [[ "$reference" = /* ]]; then
+    reference_dir="$(dirname "$reference")"
+    reference_name="$(basename "$reference")"
+  else
+    base_dir="$(dirname "$link_path")"
+    reference_dir="$base_dir/$(dirname "$reference")"
+    reference_name="$(basename "$reference")"
+  fi
+
+  if [ -d "$reference_dir" ]; then
+    printf '%s/%s\n' "$(cd "$reference_dir" && pwd -P)" "$reference_name"
+  else
+    printf '%s\n' "$reference"
+  fi
+}
+
+symlink_points_to() {
+  local link_path="$1"
+  local desired_target="$2"
+  local current_target
+
+  current_target="$(readlink "$link_path")"
+  if [ "$current_target" = "$desired_target" ]; then
+    return 0
+  fi
+
+  [ "$(resolve_link_reference "$link_path" "$current_target")" = "$(resolve_link_reference "$link_path" "$desired_target")" ]
+}
+
 replace_with_symlink() {
   local link_target="$1"
   local link_path="$2"
@@ -28,7 +64,7 @@ replace_with_symlink() {
   mkdir -p "$(dirname "$link_path")"
 
   if [ -L "$link_path" ]; then
-    if [ "$(readlink "$link_path")" = "$link_target" ]; then
+    if symlink_points_to "$link_path" "$link_target"; then
       return
     fi
     rm "$link_path"
@@ -323,6 +359,137 @@ check_managed_symlinks() {
 check_packages_resolve() {
   brew bundle list --file="$DOTFILES/Brewfile.dev" >/dev/null
   brew bundle list --file="$DOTFILES/Brewfile" >/dev/null
+}
+
+describe_link_plan() {
+  local label="$1"
+  local target="$2"
+  local path="$3"
+
+  if [ -L "$path" ]; then
+    if symlink_points_to "$path" "$target"; then
+      echo "[ok]   $label already links to $target"
+    else
+      echo "[plan] $label symlink would be replaced: $path -> $target"
+      echo "       current: $(readlink "$path")"
+    fi
+  elif [ -e "$path" ]; then
+    echo "[plan] $label would back up existing path and create symlink: $path -> $target"
+  else
+    echo "[plan] $label would create symlink: $path -> $target"
+  fi
+}
+
+describe_claude_settings_plan() {
+  local settings="$HOME/.claude/settings.json"
+  local default_settings="$DOTFILES/claude/.claude/settings.json"
+
+  if [ ! -e "$settings" ]; then
+    echo "[plan] Claude settings would be linked: $settings -> $default_settings"
+    return
+  fi
+
+  if [ -L "$settings" ]; then
+    case "$(readlink "$settings")" in
+      "$default_settings" | "../.dotfiles/claude/.claude/settings.json")
+        echo "[ok]   Claude settings already point at managed settings"
+        ;;
+      *)
+        echo "[ok]   Claude settings is an existing symlink and would be preserved: $settings -> $(readlink "$settings")"
+        ;;
+    esac
+    return
+  fi
+
+  if command -v jq >/dev/null 2>&1 && jq empty "$settings" >/dev/null 2>&1; then
+    echo "[plan] Claude settings exists and is valid JSON; statusLine would be merged"
+  else
+    echo "[plan] Claude settings exists but is not valid JSON or jq is unavailable; installer would back it up and link managed settings"
+  fi
+}
+
+describe_local_brew_bundle_plan() {
+  local host_bundle=""
+
+  if [ -f "$DOTFILES/Brewfile.local" ]; then
+    echo "[plan] Local Brewfile overlay would run: $DOTFILES/Brewfile.local"
+  fi
+
+  if command -v hostname >/dev/null 2>&1; then
+    host_bundle="$DOTFILES/Brewfile.$(hostname -s).local"
+  fi
+
+  if [ -n "$host_bundle" ] && [ -f "$host_bundle" ]; then
+    echo "[plan] Host Brewfile overlay would run: $host_bundle"
+  fi
+}
+
+run_dry_run() {
+  local mode="${1:-dev}"
+  local packages=()
+  local brewfile=""
+  local brew_flags=()
+
+  case "$mode" in
+    dev)
+      packages=("${DEV_PACKAGES[@]}")
+      brewfile="$DOTFILES/Brewfile.dev"
+      brew_flags=(--no-upgrade)
+      ;;
+    full)
+      packages=("${FULL_PACKAGES[@]}")
+      brewfile="$DOTFILES/Brewfile"
+      ;;
+    *)
+      echo "Usage: ./dot dry-run [dev|full]" >&2
+      return 2
+      ;;
+  esac
+
+  echo "Dotfiles dry run ($mode)"
+  echo "Repo: $DOTFILES"
+  echo "No filesystem or package changes will be made."
+  echo ""
+
+  echo "Packages:"
+  printf '  %s\n' "${packages[@]}"
+  echo ""
+
+  if command -v brew >/dev/null 2>&1; then
+    echo "Homebrew manifest:"
+    echo "[plan] brew bundle --file=$brewfile ${brew_flags[*]}"
+    HOMEBREW_NO_AUTO_UPDATE=1 brew bundle list --file="$brewfile" >/dev/null
+    echo "[ok]   $brewfile resolves"
+    describe_local_brew_bundle_plan
+  else
+    echo "[warn] Homebrew is not installed; package manifest checks were skipped"
+  fi
+  echo ""
+
+  if command -v stow >/dev/null 2>&1; then
+    echo "Stow dry run:"
+    (cd "$DOTFILES" && stow -nvR "${packages[@]}")
+  else
+    echo "[warn] GNU Stow is not installed; Stow conflict checks were skipped"
+  fi
+  echo ""
+
+  echo "Claude links:"
+  describe_link_plan "AGENTS.md" "../AGENTS.md" "$HOME/.claude/CLAUDE.md"
+  describe_link_plan "Claude statusline" "$DOTFILES/claude/.claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
+  describe_claude_settings_plan
+  echo ""
+
+  echo "Other planned actions:"
+  echo "[plan] Missing Claude Code and opencode CLIs would be installed"
+  echo "[plan] nvm $NVM_VERSION and Node LTS would be installed or updated"
+  echo "[plan] tmux plugins would be installed through TPM"
+
+  if [ "$mode" = "full" ]; then
+    echo "[plan] Rust stable would be installed or updated"
+    echo "[plan] pnpm would be enabled through Corepack when missing"
+    echo "[plan] macOS defaults from macos.sh would be applied"
+  fi
 }
 
 run_doctor() {
