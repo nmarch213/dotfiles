@@ -7,7 +7,6 @@ return {
           settings = {
             typescript = {
               tsserver = {
-                nodePath = vim.fn.exepath("node"),
                 maxTsServerMemory = 8192,
               },
             },

@@ -12,7 +12,7 @@ cd ~/.dotfiles
 ./install-dev.sh
 ```
 
-The dev installer uses `Brewfile.dev`, runs Homebrew with `--no-upgrade`, installs the Codex, Claude Code, and opencode CLIs when missing, restows only dev config packages, installs tmux plugins with TPM, and refuses Stow conflicts instead of adopting existing files.
+The dev installer requires Homebrew, uses `Brewfile.dev` with `--no-upgrade`, installs the Codex, Claude Code, and opencode CLIs when missing, installs or updates nvm and Node LTS, restows only dev config packages, installs tmux plugins with TPM, and refuses Stow conflicts instead of adopting existing files.
 
 Managed dev packages:
 
@@ -29,6 +29,7 @@ It also recreates:
 - `~/AGENTS.md`
 - `~/.claude/CLAUDE.md -> ../AGENTS.md`
 - `~/.claude/statusline-command.sh`
+- `~/.claude/settings.json` when missing, or just the `statusLine` field when a valid local settings file already exists
 
 ## Full Setup
 
@@ -39,7 +40,7 @@ cd ~/.dotfiles
 ./install.sh
 ```
 
-The full installer applies all packages, app casks, language runtimes, tmux plugins, and macOS defaults. It is more invasive than the dev installer.
+The full installer applies all packages, app casks, language runtimes, tmux plugins, fonts, SSH config, and macOS defaults. It refuses Stow conflicts instead of adopting existing files, but it is still more invasive than the dev installer.
 
 ## Updating
 

@@ -1,30 +1,80 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOTFILES="$HOME/.dotfiles"
+DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
+NVM_VERSION="${NVM_VERSION:-v0.40.5}"
+PACKAGES=(agents zsh git starship ghostty tmux nvim ssh fonts)
 export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 
 log() { echo "==> $1"; }
 
-ensure_claude_md_link() {
+replace_with_symlink() {
+  local link_target="$1"
+  local link_path="$2"
+
+  mkdir -p "$(dirname "$link_path")"
+
+  if [ -L "$link_path" ]; then
+    if [ "$(readlink "$link_path")" = "$link_target" ]; then
+      return
+    fi
+    rm "$link_path"
+  elif [ -e "$link_path" ]; then
+    local backup
+    backup="$link_path.backup.$(date +%Y%m%d%H%M%S)"
+    mv "$link_path" "$backup"
+    log "Backed up existing $link_path to $backup"
+  fi
+
+  ln -s "$link_target" "$link_path"
+}
+
+ensure_claude_settings() {
   local claude_dir="$HOME/.claude"
-  local claude_md="$claude_dir/CLAUDE.md"
+  local settings="$claude_dir/settings.json"
+  local default_settings="$DOTFILES/claude/.claude/settings.json"
+  local status_command="/bin/bash ~/.claude/statusline-command.sh"
 
   mkdir -p "$claude_dir"
 
-  if [ -L "$claude_md" ]; then
-    if [ "$(readlink "$claude_md")" = "../AGENTS.md" ]; then
-      return
-    fi
-    rm "$claude_md"
-  elif [ -e "$claude_md" ]; then
-    local backup
-    backup="$claude_md.backup.$(date +%Y%m%d%H%M%S)"
-    mv "$claude_md" "$backup"
-    log "Backed up existing CLAUDE.md to $backup"
+  if [ ! -e "$settings" ]; then
+    ln -s "$default_settings" "$settings"
+    return
   fi
 
-  ln -s ../AGENTS.md "$claude_md"
+  if [ -L "$settings" ]; then
+    case "$(readlink "$settings")" in
+      "$default_settings" | "../.dotfiles/claude/.claude/settings.json")
+        return
+        ;;
+      *)
+        log "Preserving existing symlinked Claude settings at $settings"
+        return
+        ;;
+    esac
+  fi
+
+  if ! jq empty "$settings" >/dev/null 2>&1; then
+    local backup
+    backup="$settings.backup.$(date +%Y%m%d%H%M%S)"
+    mv "$settings" "$backup"
+    ln -s "$default_settings" "$settings"
+    log "Backed up invalid Claude settings to $backup"
+    return
+  fi
+
+  local tmp
+  tmp="$(mktemp)"
+  jq --arg command "$status_command" \
+    '.statusLine = {"type": "command", "command": $command}' \
+    "$settings" >"$tmp"
+
+  if cmp -s "$tmp" "$settings"; then
+    rm "$tmp"
+  else
+    mv "$tmp" "$settings"
+    log "Updated existing Claude settings statusLine"
+  fi
 }
 
 install_claude_code() {
@@ -43,6 +93,27 @@ install_opencode() {
 
   log "Installing opencode..."
   curl -fsSL https://opencode.ai/install | bash
+}
+
+install_nvm_and_node() {
+  export NVM_DIR="$HOME/.nvm"
+
+  # shellcheck disable=SC1091
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+  local installed_version=""
+  if command -v nvm >/dev/null 2>&1; then
+    installed_version="$(nvm --version)"
+  fi
+
+  if [ "$installed_version" != "${NVM_VERSION#v}" ]; then
+    log "Installing nvm $NVM_VERSION..."
+    curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh" | bash
+    # shellcheck disable=SC1091
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  fi
+
+  nvm install --lts
 }
 
 # --- Prerequisites ---
@@ -77,36 +148,19 @@ brew bundle --file="$DOTFILES/Brewfile"
 log "Stowing configs..."
 cd "$DOTFILES"
 
-# Files that should never be overwritten if they already exist
-SKIP_IF_EXISTS=(
-  "$HOME/.claude/settings.json"
-)
+if ! stow -nvR "${PACKAGES[@]}"; then
+  echo ""
+  echo "Stow found conflicts. Back up or move the listed files, then rerun this script."
+  echo "This script avoids --adopt so it does not overwrite existing machine-local config."
+  exit 1
+fi
 
-# Temporarily move protected files aside
-for f in "${SKIP_IF_EXISTS[@]}"; do
-  if [ -f "$f" ] && [ ! -L "$f" ]; then
-    mv "$f" "${f}.bak"
-  fi
-done
+stow -vR "${PACKAGES[@]}"
 
-for pkg in agents zsh git starship ghostty tmux nvim ssh claude fonts; do
-  if [ -d "$pkg" ]; then
-    stow -v --adopt "$pkg" 2>/dev/null || stow -v "$pkg"
-  fi
-done
-# Reset any adopted diffs back to repo versions
-git checkout -- .
-
-# Restore protected files (overwrite the symlink)
-for f in "${SKIP_IF_EXISTS[@]}"; do
-  if [ -f "${f}.bak" ]; then
-    rm -f "$f"
-    mv "${f}.bak" "$f"
-    log "Preserved existing $(basename "$f")"
-  fi
-done
-
-ensure_claude_md_link
+log "Linking Claude agent files..."
+replace_with_symlink "../AGENTS.md" "$HOME/.claude/CLAUDE.md"
+replace_with_symlink "$DOTFILES/claude/.claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
+ensure_claude_settings
 
 # --- Rust ---
 
@@ -114,19 +168,13 @@ if ! command -v rustup &>/dev/null; then
   log "Installing Rust via rustup..."
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 fi
+# shellcheck disable=SC1091
 source "$HOME/.cargo/env" 2>/dev/null || true
 rustup update stable
 
 # --- Node ---
 
-# nvm
-if [ ! -d "$HOME/.nvm" ]; then
-  log "Installing nvm..."
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-fi
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-nvm install --lts
+install_nvm_and_node
 
 # pnpm via corepack
 if ! command -v pnpm &>/dev/null; then

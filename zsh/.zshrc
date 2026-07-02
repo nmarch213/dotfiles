@@ -19,21 +19,31 @@ else
 fi
 
 # --- Plugins (load order matters) ---
-BREW_PREFIX="${HOMEBREW_PREFIX:-/opt/homebrew}"
+if [[ -n "${HOMEBREW_PREFIX:-}" ]]; then
+  BREW_PREFIX="$HOMEBREW_PREFIX"
+elif [[ -x /opt/homebrew/bin/brew ]]; then
+  BREW_PREFIX="/opt/homebrew"
+elif [[ -x /usr/local/bin/brew ]]; then
+  BREW_PREFIX="/usr/local"
+else
+  BREW_PREFIX="$(brew --prefix 2>/dev/null)"
+fi
 
 # fzf-tab (after compinit, before other plugins)
-source "$BREW_PREFIX/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh"
+[[ -r "$BREW_PREFIX/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh" ]] && source "$BREW_PREFIX/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh"
 
 # Autosuggestions
-source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+[[ -r "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 # Syntax highlighting (must be last plugin sourced)
-source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+[[ -r "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] && source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
 # --- fzf ---
-source <(fzf --zsh)
+if command -v fzf >/dev/null 2>&1; then
+  source <(fzf --zsh)
+fi
 
 # Use fd for fzf file search (respects .gitignore)
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
@@ -54,9 +64,9 @@ zstyle ':fzf-tab:complete:ls:*' fzf-preview 'eza -1 --color=always $realpath'
 zstyle ':fzf-tab:*' fzf-flags --color=bg+:#313244,bg:#1e1e2e
 
 # --- Tools ---
-eval "$(starship init zsh)"
-eval "$(zoxide init zsh)"
-eval "$(direnv hook zsh)"
+command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
 
 # pnpm
 export PNPM_HOME="$HOME/Library/pnpm"

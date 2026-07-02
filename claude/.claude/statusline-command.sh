@@ -1,17 +1,19 @@
 #!/bin/bash
-# Claude Code status line — mirrors ~/.config/starship.toml
-# Layout: directory(lavender)  branch(mauve)  git_status(red)  nodejs(green)  ctx
+# Claude Code status line. Mirrors the compact parts of ~/.config/starship.toml.
 input=$(cat)
 
-# Parse all needed fields in one jq call
-eval "$(echo "$input" | jq -r '
-  "cwd=\(.workspace.current_dir // .cwd // "")",
-  "ctx_input=\(.context_window.current_usage.input_tokens // 0)",
-  "ctx_cache_create=\(.context_window.current_usage.cache_creation_input_tokens // 0)",
-  "ctx_cache_read=\(.context_window.current_usage.cache_read_input_tokens // 0)",
-  "ctx_size=\(.context_window.context_window_size // 0)"
-')"
+command -v jq >/dev/null 2>&1 || exit 0
 
+IFS=$'\t' read -r cwd ctx_pct < <(
+  printf '%s' "$input" | jq -r '
+    [
+      (.workspace.current_dir // .cwd // ""),
+      (.context_window.used_percentage // 0 | floor)
+    ] | @tsv
+  ' 2>/dev/null
+) || exit 0
+
+[ -n "$cwd" ] || exit 0
 cd "$cwd" 2>/dev/null || exit 0
 
 # Starship palette (256-color approximations of Catppuccin lavender/mauve)
@@ -40,12 +42,13 @@ else
 fi
 # keep last 3 path components
 dir_disp=$(echo "$dir_path" | awk -F'/' '{ n=NF; s=(n>3)?n-2:1; out=""; for(i=s;i<=n;i++){ out=(out==""?$i:out"/"$i) } print out }')
-parts+=("$(printf "${LAVENDER}%s${RESET}" "$dir_disp")")
+parts+=("$(printf '%b%s%b' "$LAVENDER" "$dir_disp" "$RESET")")
 
-# git branch (mauve, leading branch glyph)
+# git branch
 if $is_git; then
-    branch=$(git branch --show-current 2>/dev/null || echo "detached")
-    parts+=("$(printf "${MAUVE}\xee\x82\xa0 %s${RESET}" "$branch")")
+    branch=$(git branch --show-current 2>/dev/null)
+    [ -n "$branch" ] || branch="$(git rev-parse --short HEAD 2>/dev/null || echo detached)"
+    parts+=("$(printf '%bbranch:%s%b' "$MAUVE" "$branch" "$RESET")")
 
     # git status (red): modified / created / deleted counts
     status=$(git --no-optional-locks status --porcelain 2>/dev/null)
@@ -56,25 +59,24 @@ if $is_git; then
         gs=""
         [ "$total_mod" -gt 0 ] && gs="${gs}!${total_mod}"
         [ "$total_new" -gt 0 ] && gs="${gs}+${total_new}"
-        [ "$deleted" -gt 0 ] && gs="${gs}\xe2\x9c\x98${deleted}"
-        [ -n "$gs" ] && parts+=("$(printf "${RED}${gs}${RESET}")")
+        [ "$deleted" -gt 0 ] && gs="${gs}-${deleted}"
+        [ -n "$gs" ] && parts+=("$(printf '%b%s%b' "$RED" "$gs" "$RESET")")
     fi
 fi
 
 # nodejs (green) when a package.json is present
 if [ -f "package.json" ] && command -v node >/dev/null 2>&1; then
     node_version=$(node -v 2>/dev/null | sed 's/v//')
-    [ -n "$node_version" ] && parts+=("$(printf "${GREEN}\xee\x98\x99 %s${RESET}" "$node_version")")
+    [ -n "$node_version" ] && parts+=("$(printf '%bnode:%s%b' "$GREEN" "$node_version" "$RESET")")
 fi
 
-# context usage (Claude-specific; Starship has no equivalent)
-if [ "$ctx_size" -gt 0 ] 2>/dev/null; then
-    pct=$(( (ctx_input + ctx_cache_create + ctx_cache_read) * 100 / ctx_size ))
-    if [ "$pct" -ge 80 ]; then ctx_color="$RED"
-    elif [ "$pct" -ge 60 ]; then ctx_color="$YELLOW"
+# context usage
+if [ "$ctx_pct" -gt 0 ] 2>/dev/null; then
+    if [ "$ctx_pct" -ge 80 ]; then ctx_color="$RED"
+    elif [ "$ctx_pct" -ge 60 ]; then ctx_color="$YELLOW"
     else ctx_color="$BLUE"; fi
-    parts+=("$(printf "${ctx_color}ctx:%s%%${RESET}" "$pct")")
+    parts+=("$(printf '%bctx:%s%%%b' "$ctx_color" "$ctx_pct" "$RESET")")
 fi
 
 IFS=' '
-echo -e "${parts[*]}"
+printf '%s\n' "${parts[*]}"
