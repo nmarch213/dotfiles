@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES="${DOTFILES:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+# shellcheck source=script/lib.sh
+# shellcheck disable=SC1091
+source "$DOTFILES/script/lib.sh"
+
+usage() {
+  cat <<'USAGE'
+Usage: ./dot <command> [args]
+
+Commands:
+  doctor          Run static and integration checks
+  check          Alias for doctor
+  install-dev    Run the existing-machine dev installer
+  install-full   Run the full-machine installer
+  stow [pkgs...] Dry-run and stow dev packages, or the packages provided
+  check-packages Check Brewfile dependency status
+  tmux-plugins   Install tmux plugins through TPM
+  macos          Apply macOS defaults
+  help           Show this help
+USAGE
+}
+
+command_name="${1:-help}"
+shift || true
+
+case "$command_name" in
+  doctor | check)
+    run_doctor
+    ;;
+  install-dev)
+    exec "$DOTFILES/install-dev.sh" "$@"
+    ;;
+  install-full | install)
+    exec "$DOTFILES/install.sh" "$@"
+    ;;
+  stow)
+    ensure_stow_available
+    if [ "$#" -gt 0 ]; then
+      check_stow_conflicts "$@"
+      stow_packages "$@"
+    else
+      check_stow_conflicts "${DEV_PACKAGES[@]}"
+      stow_packages "${DEV_PACKAGES[@]}"
+    fi
+    ;;
+  check-packages)
+    require_command brew "Homebrew is required."
+    status=0
+    echo "Brewfile.dev"
+    brew bundle check --verbose --file="$DOTFILES/Brewfile.dev" || status=1
+    echo ""
+    echo "Brewfile"
+    brew bundle check --verbose --file="$DOTFILES/Brewfile" || status=1
+    exit "$status"
+    ;;
+  tmux-plugins)
+    require_command git "git is required."
+    require_command tmux "tmux is required."
+    install_tmux_plugins
+    ;;
+  macos)
+    bash "$DOTFILES/macos.sh"
+    ;;
+  help | -h | --help)
+    usage
+    ;;
+  *)
+    echo "Unknown command: $command_name" >&2
+    echo "" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

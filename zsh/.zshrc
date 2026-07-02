@@ -103,3 +103,6 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # opencode
 export PATH="$HOME/.opencode/bin:$PATH"
+
+# Machine-local shell overrides
+[[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"

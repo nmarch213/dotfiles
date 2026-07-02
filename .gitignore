@@ -1,1 +1,27 @@
 .DS_Store
+
+# Local package overlays
+Brewfile.local
+Brewfile.*.local
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+
+# Machine-local overrides and backups
+*.local
+*.backup.*
+*.bak
+*.tmp
+*.log
+
+# Runtime state accidentally created in the repo
+/.agents/
+/.claude/
+/.codex/
+/.opencode/
+/.cache/
+/node_modules/
